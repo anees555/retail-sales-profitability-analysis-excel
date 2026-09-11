@@ -390,6 +390,8 @@ The next stage is to clean the data while preserving the original dataset and th
 
 ## Project Status
 
-**Current Stage: Data Profiling — Completed**
+**Current Stage: Data Profiling — Completed  | Data Cleaning - Completed**
 
-**Next Stage: Data Cleaning**
+**Next Stage: Calculated Columns / Feature Engineering**
+
+
