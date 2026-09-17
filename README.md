@@ -2,53 +2,62 @@
 
 ## Project Overview
 
-This project analyzes retail transaction data using **Microsoft Excel** to understand sales performance, profitability, customer and product performance, regional trends, returns, discounts, and shipping operations.
+This project analyzes retail transaction data using **Microsoft Excel** to evaluate sales performance, profitability, product performance, customer segments, regional trends, discounts, returns, shipping operations, and time-based performance.
 
-The project follows a structured data-analysis workflow, starting with data profiling and cleaning before moving into exploratory analysis, PivotTable analysis, and an interactive Excel dashboard.
+The project follows a structured data-analysis workflow:
 
-The main objective is to turn raw retail transaction data into meaningful business insights that can support better decisions around pricing, discounts, product performance, profitability, returns, and operations.
+**Data Profiling → Data Cleaning → Feature Engineering → Exploratory Data Analysis → PivotTable Analysis → Interactive Dashboard → Business Insights**
+
+The main objective is to transform raw retail transaction data into meaningful business insights that can support decisions related to pricing, discounts, product performance, profitability, returns, and operations.
 
 ---
 
 ## Business Problem
 
-A retail business needs to understand how its sales are performing and where profitability is being gained or lost.
+A retail business needs to understand how sales and profitability are performing across products, customers, regions, and time.
 
-The analysis aims to answer questions such as:
+This project addresses questions such as:
 
 * Which product categories and sub-categories generate the most sales and profit?
-* Which products contribute the most to overall profitability?
-* Which regions and customer segments perform best?
-* How do discounts affect profitability?
-* Which products or categories have high levels of returns?
-* How does shipping duration and shipping cost affect profitability?
-* Which areas of the business require attention?
+* Which products and sub-categories have strong or weak profitability?
+* How does discounting relate to profitability?
+* How does performance vary across regions and customer segments?
+* What proportion of orders are returned?
+* Which categories have higher returned sales?
+* How does shipping duration vary across transactions?
+* Which areas require further business investigation?
 
 ---
 
 ## Objectives
 
-The project focuses on the following business areas:
+The analysis focuses on:
 
 1. Sales performance
 2. Profitability analysis
-3. Product performance
+3. Product and sub-category performance
 4. Customer segment analysis
 5. Regional performance
 6. Discount analysis
 7. Returns analysis
 8. Shipping and operational analysis
-9. Business recommendations
+9. Time-based performance analysis
+10. Business insights and recommendations
 
 ---
 
 ## Dataset
 
-The project uses a retail Superstore-style dataset containing three related tables.
+The project uses a Superstore-style retail dataset containing three related tables.
 
 ### Orders
 
-The Orders table contains **8,399 transaction rows** and **23 columns**.
+The Orders table contains:
+
+* **8,399 transaction rows**
+* **23 original columns**
+* **5,496 unique Order IDs**
+* **8,399 unique Row IDs**
 
 Important fields include:
 
@@ -83,15 +92,17 @@ The Returns table contains:
 * **572 unique Order IDs**
 * Return status
 
+All return Order IDs were validated against the Orders table.
+
 ### Users
 
-The Users table contains **8 records** mapping regions to available manager information.
+The Users table contains **8 records** mapping regions to manager information.
 
 ---
 
 ## Data Structure
 
-An important finding during profiling was that `Order ID` is not unique in the Orders table.
+An important finding during data profiling was that `Order ID` is not unique in the Orders table.
 
 | Metric                      | Value |
 | --------------------------- | ----: |
@@ -101,179 +112,277 @@ An important finding during profiling was that `Order ID` is not unique in the O
 | Returned Orders             |   572 |
 | Missing Product Base Margin |    63 |
 
-Therefore, the Orders table is treated as **transaction/order-line level data**, rather than one row representing one order.
+Therefore, the Orders table is treated as **transaction/order-line level data**, rather than one row representing one complete order.
 
-This distinction is important when calculating order-level KPIs such as total orders and return rate.
+This distinction is important when calculating order-level KPIs such as unique orders and return rate.
 
 ---
 
-## Data Profiling
+## Data Preparation
 
-The first stage of the project was data profiling.
+The original raw dataset was preserved and a separate `Orders_Cleaned` table was created.
 
-The following checks were performed:
+Data preparation included:
 
-* Dataset structure and dimensions
-* Row ID uniqueness
-* Order ID uniqueness
-* Missing values
-* Numerical data quality
-* Negative and zero values
-* Discount distribution
+* Missing-value analysis and treatment
+* Product Base Margin imputation
+* Return Order ID validation
+* Return Status creation
+* Shipping Days calculation
 * Date validation
+* Categorical consistency checks
+* Numerical data validation
+* Identification of operational anomalies
+* Creation of analytical and time-based fields
+
+Missing Product Base Margin values were handled using **sub-category-level median values**, while valid business observations such as negative-profit transactions and unusually long shipping durations were retained.
+
+Detailed methodology is documented in:
+
+* [`data_profiling.md`](data_profiling.md)
+* [`data_cleaning.md`](data_cleaning.md)
+
+---
+
+## Exploratory Data Analysis
+
+The EDA phase examined:
+
+* Sales and profit distributions
+* Product and category performance
+* Regional performance
+* Customer segment performance
+* Discount and profitability relationships
+* Returns
 * Shipping duration
-* Categorical values
-* Returns table
-* Users table
+* Annual and monthly performance
+* Sub-category profitability
 
-### Key Findings
+Detailed findings and analysis are documented in:
 
-#### Missing Values
+* [`eda.md`](eda.md)
 
-There were **63 missing Product Base Margin values**, representing approximately **0.75%** of the Orders table.
+---
 
-The missing values were associated with **10 unique products**.
+# Key Results
 
-Since no known margin existed for these products elsewhere in the dataset, the planned approach is to use the median Product Base Margin of the corresponding Product Sub-Category.
+## Overall Performance
 
-#### Profit
+| KPI               |         Value |
+| ----------------- | ------------: |
+| Total Sales       | 14,915,600.82 |
+| Total Profit      |  1,521,767.96 |
+| Profit Margin     |        10.20% |
+| Order Quantity    |       214,777 |
+| Unique Orders     |         5,496 |
+| Returned Orders   |           572 |
+| Order Return Rate |        10.41% |
 
-There were **4,264 transaction rows with negative profit**, representing approximately **50.77% of transaction rows**.
+The order return rate is calculated using unique orders:
 
-Negative profit was not considered a data error because losses can occur naturally in retail transactions.
+**572 returned orders / 5,496 unique orders = 10.41%**
 
-Instead, these records will be investigated to understand relationships between profit and factors such as discount, product category, region, shipping cost, and customer segment.
+---
 
-#### Discounts
+## Category Performance
 
-Most discounts were between **0% and 10%**.
+| Category        |             Sales |           Profit | Profit Margin |
+| --------------- | ----------------: | ---------------: | ------------: |
+| Furniture       |      5,178,590.54 |       117,432.99 |         2.27% |
+| Office Supplies |      3,752,762.10 |       518,021.46 |        13.80% |
+| Technology      |      5,984,248.18 |       886,313.52 |        14.81% |
+| **Total**       | **14,915,600.82** | **1,521,767.96** |    **10.20%** |
 
-Five unusual discount values were identified:
+Technology generated the highest sales and profit among the three product categories.
 
-* 11%
-* 16%
-* 17%
-* 21%
-* 25%
+Furniture generated substantial sales but had a considerably lower overall profit margin.
 
-These values occurred only once each.
+---
 
-They were retained because there was no documented business rule indicating that discounts above 10% were invalid.
+## Sub-Category Profitability
 
-#### Shipping Duration
+Profitability was analyzed across all 17 product sub-categories.
 
-Shipping duration was calculated as:
+Selected results include:
+
+| Sub-Category                   | Profit Margin |
+| ------------------------------ | ------------: |
+| Labels                         |           35% |
+| Binders and Binder Accessories |           30% |
+| Envelopes                      |           28% |
+| Telephones and Communication   |           17% |
+| Copiers and Fax                |           15% |
+| Office Machines                |           14% |
+| Bookcases                      |           -4% |
+| Tables                         |           -5% |
+| Scissors, Rulers and Trimmers  |          -10% |
+
+The analysis shows substantial variation in profitability across sub-categories, including several sub-categories with negative overall profit.
+
+---
+
+## Regional Performance
+
+| Region  |        Sales |     Profit | Profit Margin |
+| ------- | -----------: | ---------: | ------------: |
+| Central | 4,699,167.25 | 481,891.24 |        10.25% |
+| East    | 3,416,466.47 | 317,852.04 |         9.30% |
+| South   | 3,150,219.36 | 422,507.11 |        13.41% |
+| West    | 3,649,747.75 | 299,517.56 |         8.21% |
+
+Regional performance varies across both sales and profitability.
+
+Further category-level analysis was used to investigate the composition of these regional differences.
+
+---
+
+## Customer Segment Performance
+
+| Customer Segment |        Sales |     Profit | Profit Margin |
+| ---------------- | -----------: | ---------: | ------------: |
+| Consumer         | 3,063,611.08 | 287,959.98 |         9.40% |
+| Corporate        | 5,498,904.88 | 599,745.92 |        10.91% |
+| Home Office      | 3,564,763.88 | 318,354.10 |         8.93% |
+| Small Business   | 2,788,320.99 | 315,707.96 |        11.32% |
+
+The analysis identifies differences in sales contribution and profitability across customer segments.
+
+---
+
+## Discount Analysis
+
+Profitability was analyzed across different discount levels.
+
+Selected results:
+
+| Discount |        Sales |     Profit | Margin |
+| -------: | -----------: | ---------: | -----: |
+|       0% | 1,493,748.22 | 188,188.78 |    13% |
+|       3% | 1,335,274.71 | 222,349.04 |    17% |
+|       6% | 1,303,602.89 |  84,837.63 |     7% |
+|      10% | 1,144,692.31 |  74,445.70 |     7% |
+
+The analysis shows an association between discount levels and profitability.
+
+This is a descriptive analysis and does not establish that discounts directly cause changes in profit. Product mix, region, customer segment, and other transaction characteristics may also influence profitability.
+
+---
+
+## Returns Analysis
+
+Two different return metrics were used because the dataset contains transaction-level records and repeated Order IDs.
+
+### Order-Level Return Rate
+
+**10.41%**
+
+Calculated as:
+
+**572 returned orders / 5,496 unique orders**
+
+### Returned Sales Share
+
+Sales associated with returned orders represented approximately:
+
+**11.09% of total sales**
+
+Returned sales by category:
+
+| Category        | Returned Sales % |
+| --------------- | ---------------: |
+| Furniture       |           11.20% |
+| Office Supplies |           12.51% |
+| Technology      |           10.12% |
+| **Overall**     |       **11.09%** |
+
+These two return metrics use different denominators and should not be treated as interchangeable.
+
+---
+
+## Shipping Analysis
+
+Shipping duration was calculated using:
 
 ```excel
 =Ship Date - Order Date
 ```
 
-Results:
+Key observations:
 
-* Minimum: **0 days**
-* Median: **2 days**
-* Average: approximately **2 days**
-* Maximum: **92 days**
+* Minimum shipping duration: **0 days**
+* Median shipping duration: **2 days**
+* Average shipping duration: approximately **2 days**
+* Maximum shipping duration: **92 days**
 
 Two unusually long shipping records of **84 and 92 days** were identified.
 
-The dates were valid, so these records were retained and will be treated as operational anomalies for further investigation.
-
-#### Dates
-
-The date validation confirmed that no record had a Ship Date earlier than its Order Date.
-
-Order Date range:
-
-**1 January 2009 – 30 December 2012**
-
-Ship Date range:
-
-**2 January 2009 – 30 December 2012**
+The underlying dates were valid, so these records were retained as operational anomalies rather than treated as data errors.
 
 ---
 
-## Data Cleaning
+## Time Analysis
 
-The next stage of the project will create a cleaned version of the dataset while preserving the original raw data.
+Annual and monthly performance was analyzed across the 2009–2012 period.
 
-Planned cleaning activities include:
+| Year |        Sales |     Profit | Profit Margin |
+| ---- | -----------: | ---------: | ------------: |
+| 2009 | 4,209,139.46 | 434,538.79 |        10.32% |
+| 2010 | 3,549,680.80 | 363,871.38 |        10.25% |
+| 2011 | 3,436,816.70 | 381,455.99 |        11.10% |
+| 2012 | 3,719,963.86 | 341,901.81 |         9.19% |
 
-* Handling missing Product Base Margin values
-* Validating returned Order IDs
-* Creating Return Status
-* Creating Shipping Days
-* Checking categorical consistency
-* Identifying potential data-quality anomalies
-* Preserving valid business outliers
-
-The original dataset will not be modified.
+A monthly analysis covering the full 48-month period was also created to examine changes in sales and profit over time.
 
 ---
 
-## Planned Analysis
+# Interactive Dashboard
 
-After cleaning, the project will analyze:
+The final Excel dashboard combines KPI cards, PivotCharts, and interactive slicers.
 
-### Sales Performance
+### Dashboard KPIs
 
-* Total sales
-* Sales by year and month
-* Sales by region
-* Sales by product category
-* Sales by customer segment
+* Total Sales
+* Total Profit
+* Profit Margin
+* Unique Orders
+* Return Rate
 
-### Profitability
+### Dashboard Charts
 
-* Total profit
-* Profit margin
-* Profit by category and sub-category
-* Loss-making products
-* Profitability by region
-* Relationship between discount and profit
+* Monthly Sales & Profit Trend
+* Sales & Profit by Category
+* Profit Margin by Subcategory
+* Regional Sales & Profit Margin
+* Sales & Profit Margin by Customer Segment
+* Returned Sales % by Category
 
-### Product Analysis
+### Interactive Slicers
 
-* Top-selling products
-* Most profitable products
-* Loss-making products
-* Product category performance
-* Product sub-category performance
+* Order Year
+* Region
+* Product Category
+* Customer Segment
 
-### Customer Analysis
-
-* Customer segment performance
-* Sales by customer segment
-* Profit by customer segment
-* Top customers
-
-### Returns
-
-* Total returned orders
-* Return rate
-* Returns by product category
-* Returns by region
-* Returns by customer segment
-
-### Shipping
-
-* Average shipping duration
-* Shipping duration by ship mode
-* Shipping cost analysis
-* Long-shipping orders
-* Relationship between shipping and profitability
+The slicers are connected to the dashboard PivotTables and allow users to interactively filter the analysis.
 
 ---
 
-## Excel Skills Demonstrated
+## Dashboard Preview
 
-This project is designed to demonstrate practical Microsoft Excel data-analysis skills, including:
+![Retail Sales Analysis Dashboard](screenshots/dashboard.png)
+
+---
+
+# Excel Techniques Demonstrated
+
+This project demonstrates practical Excel data-analysis and business intelligence skills, including:
 
 * Excel Tables
-* Data cleaning
 * Data profiling
+* Data cleaning
 * Missing-value analysis
-* Duplicate detection
+* Median-based imputation
+* Duplicate and uniqueness analysis
 * Conditional logic
 * `IF`
 * `COUNT`
@@ -292,14 +401,16 @@ This project is designed to demonstrate practical Microsoft Excel data-analysis 
 * PivotTables
 * PivotCharts
 * Slicers
-* Interactive dashboards
+* Power Pivot
+* DAX measures
+* Dashboard development
 * Business-oriented data interpretation
 
 ---
 
-## Workbook Structure
+# Workbook Structure
 
-The final Excel workbook is planned to contain the following sheets:
+The final workbook contains dedicated sheets for data preparation, analysis, PivotTables, and dashboard development.
 
 ```text
 Raw_Data
@@ -307,18 +418,39 @@ Data_Profiling
 Data_Cleaning
 Calculated_Data
 Exploratory_Analysis
-Pivot_Analysis
+Pivot_Category
+Pivot_SubCategory
+Pivot_Discount
+Pivot_Category_Discount
+Pivot_Returns
+Pivot_Segment
+Pivot_Region
+Pivot_Region_Category
+Pivot_Time
+Dashboard_Pivots
 Dashboard
 Business_Insights
+Orders_Cleaned
+Margin_Reference
+Returns
+Users
 ```
-
-Each sheet has a specific purpose so that the workflow remains reproducible and easy to understand.
 
 ---
 
-## Project Workflow
+# Project Documentation
 
-The project follows this workflow:
+Detailed project documentation is available in separate Markdown files:
+
+| File                                     | Description                                                                      |
+| ---------------------------------------- | -------------------------------------------------------------------------------- |
+| [`data_profiling.md`](data_profiling.md) | Dataset structure, quality checks, profiling results, and anomalies              |
+| [`data_cleaning.md`](data_cleaning.md)   | Cleaning methodology, missing-value treatment, validation, and calculated fields |
+| [`eda.md`](eda.md)                       | Exploratory analysis, PivotTable findings, and business observations             |
+
+---
+
+# Project Workflow
 
 ```text
 Raw Data
@@ -329,69 +461,78 @@ Data Cleaning
    ↓
 Calculated Fields
    ↓
-Exploratory Analysis
+Exploratory Data Analysis
    ↓
 PivotTable Analysis
    ↓
-Dashboard
+PivotCharts
    ↓
-Business Insights & Recommendations
+Interactive Dashboard
+   ↓
+Business Insights
 ```
 
 ---
 
-## Current Progress
+# Repository Structure
 
-* [x] Dataset imported into Excel
-* [x] Dataset structure reviewed
-* [x] Row ID uniqueness checked
-* [x] Order ID uniqueness investigated
-* [x] Missing values profiled
-* [x] Numerical fields profiled
-* [x] Profit distribution investigated
-* [x] Discount distribution investigated
-* [x] Date fields validated
-* [x] Shipping duration calculated and profiled
-* [x] Categorical fields profiled
-* [x] Returns table profiled
-* [x] Users table profiled
-* [ ] Data cleaning
-* [ ] Calculated fields
-* [ ] Exploratory analysis
-* [ ] PivotTable analysis
-* [ ] Dashboard
-* [ ] Business insights and recommendations
+```text
+retail-sales-profitability-analysis-excel/
+│
+├── README.md
+│
+├── retail_sales_analysis_excel.xlsx
+│
+├── data_profiling.md
+├── data_cleaning.md
+├── eda.md
+│
+└── screenshots/
+    └── dashboard.png
+```
+
+If the workbook or screenshots are stored in separate folders, update the paths accordingly.
 
 ---
 
-## Key Data Profiling Conclusions
-
-The dataset is generally suitable for analysis.
-
-The main data-quality issue identified is the **63 missing Product Base Margin values**. These will be handled using sub-category-level median imputation.
-
-Other unusual observations, such as negative-profit transactions, high discounts, and very long shipping durations, were retained because they may represent legitimate business conditions rather than data errors.
-
-The next stage is to clean the data while preserving the original dataset and then begin the analytical phase.
-
----
-
-## Tools
+# Tools
 
 * **Microsoft Excel**
+* **Power Pivot**
+* **DAX**
 * Excel Tables
 * PivotTables
 * PivotCharts
-* Excel formulas
-* Conditional Formatting
 * Slicers
+* Conditional Formatting
 
 ---
 
-## Project Status
+# Project Status
 
-**Current Stage: Data Profiling — Completed  | Data Cleaning - Completed**
+**Completed**
 
-**Next Stage: Calculated Columns / Feature Engineering**
+The project includes:
 
+* Data profiling
+* Data cleaning
+* Missing-value treatment
+* Return validation
+* Feature engineering
+* Exploratory data analysis
+* PivotTable analysis
+* PivotCharts
+* Interactive dashboard
+* Interactive slicers
+* Business insights
+* Project documentation
 
+---
+
+## Author
+
+**Anish Dahal**
+
+Computer Engineering Graduate | Data Analytics & Data Science
+
+[GitHub](https://github.com/anees555) · [LinkedIn](https://www.linkedin.com/in/aneesh-dahal-98b171338/)
